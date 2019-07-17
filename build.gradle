@@ -75,3 +75,32 @@ shadowJar {
 }
 
 // endregion Prepare Docker build folder
+gradle.projectsEvaluated {
+    gradle ->
+        println "项目数量："+ gradle.getRootProject().getAllprojects().size()
+        def projects = gradle.getRootProject().getAllprojects()
+        projects.each {Project project ->
+            println "项目名称："+project.name
+            project.getDependencies().findAll().each {
+                Object object ->
+                    println object
+            }
+            def names = project.configurations.getNames()
+            names.each {String name ->
+                def configuration = project.configurations.getByName(name)
+                println configuration.getName()
+                configuration.each { File file ->
+                    println project.name+"依赖jar包路径："+(file.getCanonicalPath())
+                    copy {
+                        from file
+                        into "lib"
+                        rename { String fileName ->
+                            //防止文件重名
+                            fileName = file.getParentFile().getName()+"_"+fileName
+                        }
+                    }
+                }
+            }
+        }
+        println "所有的project输出jar包完毕"
+}
